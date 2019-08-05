@@ -14,6 +14,25 @@ from sklearn.feature_extraction.image import extract_patches
 from joblib import Parallel, delayed
 
 
+'''
+This script is intended to create training data that can be fed into the 
+convolutional autoencoder found in this repository.  
+
+Run from the command line and provide required command line arguements:
+    
+--data-name : The name that will be prefixed to all training data
+--data-dir : Location all LAS files wished to be included in training data
+--output-dir : Location where all output will be saved
+--cpu-count : Number of cpu's used while processing
+--patch-size : The window of data used to extract patches of log values
+--clip-log : Boolean - if anomalous values are present this will clip to p1 / p99
+--log-name : Name of log to use in the analysis
+--skip-inc : This specificies how many samples to skip in each well log
+--depth-inc : Specifies the sampling rate the logs will be resampled to
+
+'''
+
+
 class CreateTrainingData:
     
     def __init__(self, args):
