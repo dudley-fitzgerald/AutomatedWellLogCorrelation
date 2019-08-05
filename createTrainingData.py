@@ -6,86 +6,130 @@ Created on Fri Jul 12 14:28:53 2019
 @author: dudley
 """
 
-import lasio, os
+import lasio, os, argparse
 import pandas as pd
 import numpy as np
 from scipy.interpolate import interp1d
 from sklearn.feature_extraction.image import extract_patches
 from joblib import Parallel, delayed
 
- 
-#lasDirs = {'eagleford' : '/media/hdd/datasets/Eagleford/RAW Data/Kingdom',
-#           'kansas' : '/media/hdd/datasets/KansasOG/LAS',
-#           'northdakota' : '/media/hdd/datasets/ND/LAS',
-#           'ohio' : '/media/hdd/datasets/Ohio'}
 
-lasDirs = {'wy' : '/media/hdd/datasets/WY/LASFiles/'}
-
-
-def readLasFiles(fileName, fileDir, loc):
+class CreateTrainingData:
     
-    try:
-        file = os.path.join(fileDir, fileName)
-        header = lasio.read(file, ignore_data=True)
-        if 'GR' in list(header.curvesdict.keys()):
-            las = lasio.read(file)
-            df = pd.DataFrame(las.df()['GR'])
-            df = df.replace(np.inf, np.nan)
-            df = df.dropna()
-            if len(df) > 50:
-                dept = df.index
-                log = df['GR']
-                deptInc = np.random.choice(np.arange(5, 35, 5)) / 10
-                deptNew = np.arange(np.ceil(dept.min()), 
-                                    np.floor(dept.max()), 
-                                    deptInc)
-                func = interp1d(dept, log)
-                logNew = func(deptNew)
-                df = pd.DataFrame()
-                df['GR'] = logNew
-                df['Well'] = fileName.split('.')[0]
-                df['Loc'] = loc
+    def __init__(self, args):
+        
+        self.dataName = args.data_name
+        self.dataDir = args.data_dir
+        self.outputDir = args.output_dir
+        self.cpuCount = args.cpu_count
+        self.patchSize = args.patch_size
+        self.clipLog = args.clip_log
+        self.logName = args.log_name
+        self.skipInc = args.skip_inc
+        self.deptInc = args.depth_inc
+        
+        self.run()
+        
+        
+    def readLasFiles(self, fileName):
+    
+        try:
+            
+            # Read LAS Header
+            header = lasio.read(fileName, ignore_data=True)
+            
+            # Check if log in header, read data, remove Nan, resample to common increment
+            if self.logName in list(header.curvesdict.keys()):
+                las = lasio.read(fileName)
+                df = pd.DataFrame(las.df()[self.logName])
+                df = df.replace(np.inf, np.nan)
+                df = df.dropna()
                 
-                return(df)
-           
-    except Exception as e:
-        print(e)
-
-
-def saveLasPatches(lasData):
+                if len(df) > 50:
+                    dept = df.index
+                    log = df[self.logName]
+                    deptNew = np.arange(np.ceil(dept.min()), 
+                                        np.floor(dept.max()), 
+                                        self.deptInc)
+                    func = interp1d(dept, log)
+                    logNew = func(deptNew)
+                    df = pd.DataFrame()
+                    df[self.logName] = logNew
+                    df['Well'] = os.path.basename(fileName).split('.')[0]
+                    
+                    return(df)
+               
+        except Exception as e:
+            print(e)    
+            
+            
+    def run(self):
+        
+        try:
+        
+            # Get path to all LAS files in directory
+            files = os.listdir(self.dataDir)
+            files = [os.path.join(self.dataDir, i) for i in files if i.endswith('.las')]
+            
+            # Get LAS data for specified files
+            lasData = Parallel(n_jobs=self.cpuCount)(delayed(self.readLasFiles)(f) for f in files)
+            lasData = [i for i in lasData if i is not None]
+            lasData = pd.concat(lasData, ignore_index=True)
+            
+            # Scale data
+            if self.clipLog:
+                p1 = np.percentile(lasData[self.logName], 1)
+                p99 = np.percentile(lasData[self.logName], 99)
+                lasData[self.logName] = np.clip(lasData[self.logName], p1, p99)
+            stats = lasData[self.logName].describe()
+            lasData[self.logName] -= stats.loc['mean']
+            lasData[self.logName] /= stats.loc['std']
+            stats = lasData[self.logName].describe()
+            lasData[self.logName] -= stats.loc['min']
+            lasData[self.logName] /= (stats.loc['max'] - stats.loc['min'])
+            
+            # Extract patches and save to disk
+            wellGrps = lasData.groupby('Well')
+            Parallel(n_jobs=self.cpuCount)(delayed(self.saveLasPatches)(wellGrps.get_group(i), i) for i in lasData['Well'].unique())
+        
+        except Exception as e:
+            print('Something broke', e)
+            
+            
+    def saveLasPatches(self, lasData, wellName):
     
-    try:
-        window = 256
-        hw = window // 2
-        dirName = lasData['Loc'].iloc[0]
-        wells = lasData['Well'].unique()
-        for well in wells:            
-            data = lasData[lasData['Well'] == well]['GR'].values
+        try:
+            
+            #  Pad data, extract patches, save to disk
+            window = self.patchSize
+            hw = window // 2       
+            data = lasData[self.logName].values
             pad = np.pad(data, (hw, hw), 'reflect')
-            patch = extract_patches(pad, window, 10)
+            patch = extract_patches(pad, window, self.skipInc)
             patch = patch[np.newaxis]
             patch = np.moveaxis(patch, 1, 0)
-            np.save('/media/hdd/autoprop/trainingData/{}_{}'.format(dirName, well), patch)
-            
-    except Exception as e:
-        print(e)
+            outputFile = '{}_{}'.format(self.dataName, wellName)
+            outputPath = os.path.join(self.outputDir, outputFile)
+            np.save(outputPath, patch)
+                
+        except Exception as e:
+            print(e)
         
-        
-datas = {}
-for loc, path in lasDirs.items():
-    files = os.listdir(path)[::2]
-    datas[loc] = Parallel(n_jobs=6)(delayed(readLasFiles)(i, path, loc) for i in files)
-    datas[loc] = [i for i in datas[loc] if i is not None]
-    datas[loc] = pd.concat(datas[loc], ignore_index=True)
-    datas[loc]['GR'] = np.clip(datas[loc]['GR'], 
-                               np.percentile(datas[loc]['GR'], 1),
-                               np.percentile(datas[loc]['GR'], 99))
-    stats = datas[loc]['GR'].describe()
-    datas[loc]['GR'] -= stats.loc['mean']
-    datas[loc]['GR'] /= stats.loc['std']
-    stats = datas[loc]['GR'].describe()
-    datas[loc]['GR'] -= stats.loc['min']
-    datas[loc]['GR'] /= (stats.loc['max'] - stats.loc['min'])
+
+if __name__ == '__main__':
+
+    # Get command line arguements
+    parser = argparse.ArgumentParser()
+    arg = parser.add_argument
+    arg('--data-name', type=str, default='input')
+    arg('--data-dir', type=str)
+    arg('--output-dir', type=str)
+    arg('--cpu-count', type=int, default=os.cpu_count())
+    arg('--patch-size', type=int, default=256)
+    arg('--clip-log', type=bool, default=True)
+    arg('--log-name', type=str, default='GR')
+    arg('--skip-inc', type=int, default=10)
+    arg('--depth-inc', type=float, default=1)
+    args = parser.parse_args()
     
-#lasData = Parallel(n_jobs=6)(delayed(getLasData)(k, v) for k, v in lasDirs.items())
-Parallel(n_jobs=6)(delayed(saveLasPatches)(data) for data in datas.values())
+    CreateTrainingData(args)
