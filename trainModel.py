@@ -54,12 +54,15 @@ class TrainModel:
         
         self.run()
         
-        
+     
+    # Retrieve the training data from disk and format appropriately
     def getTrainingData(self):
         
+        # Get files from directory, subsample, and shuffle
         files = os.listdir(self.dataDir)[::self.skipInc]
         np.random.shuffle(files)
         
+        # Determine split and load data
         trainTestSplit = int(len(files) * self.dataSplitRatio)
         trainData = [np.load(os.path.join(self.dataDir, f)) for f in files[:trainTestSplit]]
         trainData = np.vstack(trainData)
@@ -70,14 +73,20 @@ class TrainModel:
         print('Training data loaded')
         
         
+    # Create a plot of training & testing loss and Input vs Predicted data
     def plotData(self, trainLoss, testLoss, inImg, outImg, epoch, phase):
         
+        # Initialize plot
         f, ax = plt.subplots(1, 2, figsize=(20, 5))
+        
+        # Create plot of testing and training loss
         ax[0].plot(trainLoss, label='Train loss')
         ax[0].plot(testLoss, label='Test loss')
+        ax[0].set_ylabel('Loss (log)')
         ax[0].legend()
         ax[0].set_yscale('log')
         
+        # Create plot of Input curve vs Predicted curve
         ax[1].set_title('Curves')
         ax[1].plot(inImg, c='b', label='Target')
         ax[1].plot(outImg, c='r', label='Predicted')
@@ -90,6 +99,7 @@ class TrainModel:
         f.savefig(path)
         
         
+    # Run the script
     def run(self):
         
         self.setPaths()
@@ -99,6 +109,7 @@ class TrainModel:
         self.saveModel()
         
         
+    # Save model to disk
     def saveModel(self):
         
         path = os.path.join(self.outputDir, self.modelName)
@@ -107,6 +118,7 @@ class TrainModel:
         print('Model saved')
         
         
+    # Import model, set optimizer and criterion
     def setModel(self):
         
         self.model = ConvAEDeep().cuda()
@@ -116,6 +128,7 @@ class TrainModel:
         print('Model set')
         
         
+    # Assess whether paths provided exist, if not create
     def setPaths(self):
         
         if not os.path.exists(self.dataDir):
@@ -128,13 +141,20 @@ class TrainModel:
             os.mkdir(self.imgsDir)
         
     
+    # Train model
     def trainModel(self):
         
+        # Record of running losses
         trainLoss = []
         testLoss = []
         
+        # Iterate over model 
         for epoch in range(self.epochs) :
+            
+            # For each epoch differentiate between testing and training pahses
             for phase in ['train', 'test']:
+                
+                # Set the model mode and determine the appropriate number of batches
                 if phase =='train':
                     self.model.train()
                     shape = self.data['train'].shape[0]
@@ -144,6 +164,7 @@ class TrainModel:
                     shape = self.data['test'].shape[0]
                     splits = np.array_split(range(shape), self.batchSize)           
                 
+                # Iterate over batches, get outputs, compute error, update model weights
                 running_loss = 0.0
                 for num, batch in enumerate(splits):
                     inputs = Variable(torch.from_numpy(self.data[phase][batch])).float().cuda()
@@ -158,12 +179,14 @@ class TrainModel:
                             
                     running_loss += loss.item() * inputs.size(0)
                     
+                # Capture epoch loss
                 epoch_loss = running_loss / inputs.size(0)
                 if phase == 'train':
                     trainLoss.append(epoch_loss)
                 else:
                     testLoss.append(epoch_loss)
                     
+                # Save images 
                 if self.saveImgs:
                     imgNum = np.random.randint(0, inputs.size(0))
                     inImg = inputs[imgNum].cpu().data.numpy().squeeze()
