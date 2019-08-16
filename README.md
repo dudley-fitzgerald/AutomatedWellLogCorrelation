@@ -53,6 +53,11 @@ python createAutoWellProject.py --proj-name autoWell --proj-dir /path/to/project
 
 #### Creating the AutoWellCorrelation class and building a connectivity graph
 
-The correlation process is an adaptation of panormic stiching for 1D well logs.
+The correlation process is an adaptation of panormic stiching for 1D well logs.  The scripts provided here and somewhat incomplete.  Please see the end of the README file for additional work.
 
 ![Create AutoWellCorrelation](/images/autoWellCorrWorkflow.png)
+
+The first two steps are relatively straight forward.  We first need to load the data and the process the well logs to be usable by our 1D Convolutional Autoenconder.
+
+An example of what the windowed well log data looks like:
+![windowed well log data](/images/windowExtractions.png)
