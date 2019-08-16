@@ -14,7 +14,7 @@ The process captured in this repository leverages a variety of different capabil
 
 ### Training a 1D Convolutional Autoencoder
 
-Ultimately we want to train a model that can learn higher dimensional representations of well log expressions that we can use to assess similarities between well logs.  In order to achieve this a very simple 1D Convultional Autoencorder was put together using PyTorch.  This model contains a 5 layer enconding method consiting of 1D convolutional layers that are combined with ReLu activation and Max Pooling functions, as well as a 5 layer decoding method consisting of 1D transpose convolutional layers that are combined with ReLu activation functions.  **There is definitely room to improve on the architecture of this model.**
+Ultimately we want to train a model that can learn higher dimensional representations of well log expressions that we can use to assess similarities between well logs.  In order to achieve this a very simple 1D Convolutional Autoencorder was put together using PyTorch.  This model contains a 5 layer enconding method consiting of 1D convolutional layers that are combined with ReLu activation and Max Pooling functions, as well as a 5 layer decoding method consisting of 1D transpose convolutional layers that are combined with ReLu activation functions.  **There is definitely room to improve on the architecture of this model.**
 
 #### Create training data
 
@@ -27,3 +27,11 @@ python createTrainingData.py --data-name autoWell --data-dir /path/to/LAS/files 
 #### Train model
 
 ![Train model](/images/trainModelWorkflow.png)
+
+Training the model is fairly simple and consistent with how most CNN's are trained.  The **trainModel.py** script accepts a series of command line arguements that will being the training process.  Explaination of the arguements can be found in the script.  An example would be:
+
+python trainModel.py --model-name myNewModel --data-dir /path/to/trainingData --output-dir /location/to/save/model 
+
+**Note: the model doesn't always initialize well.  If the loss remains fairly consistent after a few epochs, kill the script and run again**
+
+**Note: Currently the script is hard coded in terms of optimizer, learning rate, and criterion**
