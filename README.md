@@ -70,7 +70,11 @@ First, we compute the feature vectors by passing the well log values through enc
 Second, we compute the Difference of Gaussians and identify key points for each well log:
 ![key points](/images/keyPointsDoG.png)
 
-Third, we compute a cost and a lag (depth) distance matrix using the feature vectors and depths at the location of the key points identified in the previous step.  
+Third, we compute a cost and a lag (depth) distance matrix using the feature vectors and depths at the location of the key points identified in the previous step.  The cost matrix is then analyzed for local minima in both the I and J directions to find matching points which represent the indices of correlations between well logs  
 
 Example of cost map and matching points:
 ![cost map #1](/images/costMap1.png)
+![cost map #2](/images/costMap2.png)
+![cost map #2](/images/costMap3.png)
+
+Each of the matching points is added to a NetworkX graph as an edge.  The purpose of generating this graph is to enable automated picking of individual markers or for generating a global interpretation across all wells and depths.  The results here are limited, but could be extended to encompass the global solution.
