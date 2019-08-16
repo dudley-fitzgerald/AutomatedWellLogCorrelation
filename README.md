@@ -12,10 +12,10 @@ Correlating well logs is a time consuming, tedious task.  Depending on the numbe
 
 The process captured in this repository leverages a variety of different capabilities from the computer vision and image processing community.  Essentially, the approach outlined here is a 1D adaptation of panoramic stiching using feature vectors generated from a 1D Convolutional Autoencoder.  The basic idea being to identify a series of matching points between a pair of well logs from locally minimal values in a cost matrix that was generated from two sets of feature vectors.
 
-### Generating feature vectors
+### Training a 1D Convolutional Autoencoder
 
-In order to generate feature vectors for each well log in the analysis we need a couple of things:
+Ultimately we want to train a model that can learn higher dimensional representations of well log expressions that we can use to assess similarities between well logs.  In order to achieve this a very simple 1D Convultional Autoencorder was put together using PyTorch.  This model contains a 5 layer enconding method consiting of 1D convolutional layers that are combined with ReLu activation and Max Pooling functions, as well as a 5 layer decoding method consisting of 1D transpose convolutional layers that are combined with ReLu activation functions.  **There is definitely room to improve on the architecture of this model.**
 
-1. Input data
-	1. Well header with surface coordinates
-	2. Well log data in LAS format
+#### Create training data
+
+![Create training data workflow](/images/createTrainingDataWorkflow.png)
