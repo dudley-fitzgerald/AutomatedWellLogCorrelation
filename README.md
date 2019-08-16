@@ -32,9 +32,20 @@ Training the model is fairly simple and consistent with how most CNN's are train
 
 python trainModel.py --model-name myNewModel --data-dir /path/to/trainingData --output-dir /location/to/save/model 
 
-**Note: the model doesn't always initialize well.  If the loss remains fairly consistent after a few epochs, kill the script and run again**
+**Note: The model doesn't always initialize well.  If the loss remains fairly consistent after a few epochs, kill the script and run again**
 
 **Note: Currently the script is hard coded in terms of optimizer, learning rate, and criterion**
 
 Here is an example of the prediction on a windowedd extraction from the test data set along with the loss curves after nearly 250 epochs.
 ![Loss and validation](/images/trainValidation.png)
+
+### Correlating well logs
+
+#### Creating a project
+
+In order to correlate well logs using these scripts you will need to create a project file.  This file is a HDF5 data store that contains the well header and all of the well logs as Pandas DataFrames.
+![Create project](/images/createDataStructureWorkflow.png)
+
+Creating the project is a bit clunky, but using the **createAutoWellProject.py** script along with the appropriate command line arguements you should be able to successfully construct a project.  In the header file you will need to have at least 3 columns, 1) UWI / API, 2) X coorinate, and 3) Y coordinate.  In the terminal you will need to specify the column name that corresponds to the appropriate value so the script will use the right columns.  Additionally, the LAS files must be named the same value as can be found in the UWI column of the header to match the well log data to the appropriate coordinate.  Explaination of the arguements can be found in the script.  An example would be:
+
+python createAutoWellProject.py --proj-name autoWell --proj-dir /path/to/project/location --header-dir /path/to/headerFile --las-dir /las/directory --uwi-col APINo --x-col Longitude --y-col Latitude
