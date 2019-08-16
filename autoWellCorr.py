@@ -56,7 +56,9 @@ class AutoWellCorrelation:
         self.halfWindow = self.windowSize // 2
         
         self.getModel()
-        self.getWellData()
+        self.getWellData()        
+        self.scaleLogData()
+        self.computePatches()
         
         
     # Create a NetworkX graph to store likely correlations between all wells 
