@@ -35,3 +35,6 @@ python trainModel.py --model-name myNewModel --data-dir /path/to/trainingData --
 **Note: the model doesn't always initialize well.  If the loss remains fairly consistent after a few epochs, kill the script and run again**
 
 **Note: Currently the script is hard coded in terms of optimizer, learning rate, and criterion**
+
+Here is an example of the prediction on a windowedd extraction from the test data set along with the loss curves after nearly 250 epochs.
+![Loss and validation](/images/trainValidation.png)
