@@ -56,7 +56,8 @@ class AutoWellCorrelation:
         self.halfWindow = self.windowSize // 2
         
         self.getModel()
-        self.getWellData()        
+        self.getWellData()   
+        self.getWellPairs()
         self.scaleLogData()
         self.computePatches()
         
@@ -82,7 +83,7 @@ class AutoWellCorrelation:
                 vector1 = self.getFeatureVector(uid1)
                 vector2 = self.getFeatureVector(uid2)
                 
-                # Comput DoG and Key Points for each well in pair
+                # Compute DoG and Key Points for each well in pair
                 dog1 = self.computeDoG(uid1)
                 dog2 = self.computeDoG(uid2)
                 kP1 = self.getKeyPoints(dog1)                
