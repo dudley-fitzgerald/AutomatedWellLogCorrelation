@@ -53,11 +53,24 @@ python createAutoWellProject.py --proj-name autoWell --proj-dir /path/to/project
 
 #### Creating the AutoWellCorrelation class and building a connectivity graph
 
-The correlation process is an adaptation of panormic stiching for 1D well logs.  The scripts provided here and somewhat incomplete.  Please see the end of the README file for additional work.
+The correlation process is an adaptation of panormic stiching for 1D well logs.  The scripts provided here are somewhat incomplete.  Please see the end of the README file for additional work.
 
 ![Create AutoWellCorrelation](/images/autoWellCorrWorkflow.png)
 
-The first two steps are relatively straight forward.  We first need to load the data and the process the well logs to be usable by our 1D Convolutional Autoenconder.
+The first two steps are relatively straight forward.  We first need to load the data and process the well logs to be usable by our 1D Convolutional Autoenconder.  Additionally, we identify well pairs based on spatial proximity to each other.
 
 An example of what the windowed well log data looks like:
 ![windowed well log data](/images/windowExtractions.png)
+
+To automatically correlate our well logs we iterate over all of the pairs of wells and process the pairs individually.
+
+First, we compute the feature vectors by passing the well log values through encoding portion of our autoencoder:
+![feature vectors](/images/featureVectors.png)
+
+Second, we compute the Difference of Gaussians and identify key points for each well log:
+![key points](/images/keyPointsDoG.png)
+
+Third, we compute a cost and a lag (depth) distance matrix using the feature vectors and depths at the location of the key points identified in the previous step.  
+
+Example of cost map and matching points:
+![cost map #1](/images/costMap1.png)
