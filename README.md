@@ -55,4 +55,4 @@ python createAutoWellProject.py --proj-name autoWell --proj-dir /path/to/project
 
 The correlation process is an adaptation of panormic stiching for 1D well logs.
 
-![Create AutoWellCorrelation](/images/autoWellCorr.png)
+![Create AutoWellCorrelation](/images/autoWellCorrWorkflow.png)
