@@ -19,3 +19,7 @@ Ultimately we want to train a model that can learn higher dimensional representa
 #### Create training data
 
 ![Create training data workflow](/images/createTrainingDataWorkflow.png)
+
+Aggregate as many well logs of the same type as possible and put them in the same directory.  The **createTrainingData.py** script accepts a series of command line arguements that will process the well log data and for each well take a series of windowed extractions and save them to disk as a 2D array.  An example would be:
+
+'python createTrainingData.py --data-name autoWell --data-dir /path/to/LAS/files --log-name GR'
